@@ -1,0 +1,257 @@
+/*
+Inspired by:
+https://moderncss.dev/modern-css-for-dynamic-component-based-architecture/ 
+https://12daysofweb.dev/2022/cascade-layers/
+
+Cascading @layer note: 
+  * Not scoped
+  * Last one wins in order of introduction (just like normal CSS rules)
+  * Decreases specificity/priority (easily overriden by root level (non-@layer) rules)
+
+*/
+
+/* @layer cascade order introduction (no required) */
+@layer reset, theme, global, typography, layout, components, utilities, states, feature-detection;
+
+@layer reset {
+  *,
+  :after,
+  :before {box-sizing: border-box;}
+
+  /* Baseline for default links */
+  a:not([class]) {
+    /* Relatively sized thickness and offset */
+    text-decoration-thickness: max(0.08em, 1px);
+    text-underline-offset: 0.15em;
+  }
+
+  :focus-visible {
+    --outline-size: max(2px, 0.15em);
+
+    outline: var(--outline-width, var(--outline-size))
+      var(--outline-style, solid) var(--outline-color, currentColor);
+    outline-offset: var(--outline-offset, var(--outline-size));
+  }
+
+  /* Scroll padding allowance above anchor links */
+  :target {scroll-padding-block-start: 2rem;}
+
+  /* Scroll padding allowance below focused elements 
+  to ensure they are clearly in view */
+  :focus {scroll-padding-block-end: 8vh;}
+}
+
+/* - - - - - - - - - - - */
+
+@layer theme {
+  :root {
+    --primary: hsl(265, 38%, 13%);
+    --secondary: hsl(283, 6%, 45%);
+    --tertiary: hsl(257, 15%, 91%);
+    --light: hsl(270, 100%, 99%);
+    --accent: hsl(278, 100%, 92%);
+    --accent--alt: hsl(279, 100%, 97%);
+    --accent--ui: hsl(284, 55%, 66%);
+  }
+
+  html {
+    color-scheme: light dark;
+    accent-color: var(--accent--alt);
+  }
+
+  /* button.danger {background: maroon;}
+  button.info {background: darkslateblue;}
+  call-to-action {background: mediumvioletred;} */
+}
+ 
+@layer utilities {
+
+  /* Ensure content is not clipped unless it will be accessible to keyboard users, without creating a confusing mess for screen reader users. 
+  https://adrianroselli.com/2021/06/using-css-to-enforce-accessibility.html#Keyboard */
+  [role="region"][aria-labelledby][tabindex] {overflow: auto;}
+  [role="region"][aria-labelledby][tabindex]:focus {outline: .1em solid rgba(0,0,0,.1);}
+
+  /* Only hide content when the programmatic state of the trigger (assuming it is the previous sibling) has been correctly set to convey the content it controls is hidden.
+  https://adrianroselli.com/2021/06/using-css-to-enforce-accessibility.html#Hidden */
+  button[aria-expanded="false"] + * {display: none;}
+  button[aria-expanded] + * { /* Don't need anything here. */ }
+
+  /* Choosing a radio button for “Other” in a set of options shows a text box, provided your HTML structure is simple. An ID selector with a couple pseudo-classes and a general sibling combinator can go a long way. */
+  #p5:not(:checked) ~ div {display: none;}
+
+  /* 
+  https://adrianroselli.com/2020/05/disclosure-widgets.html#Accordion */
+  /* :has() is supported nowhere yet */
+  h2:has(> button[aria-expanded="false"]) + div {display: none;}
+
+
+ /* https://www.scottohara.me/blog/2022/09/12/details-summary.html */
+}
+
+/* - - - - - - - - - - - */
+
+@layer states {
+  :disabled {background: dimgray;}
+}
+
+/* - - - - - - - - - - - */
+
+@layer components {
+
+  @layer summary-details {
+    
+  }
+ 
+  /* Sortable Table Columns: selectors are pretty clear in their reliance on the sort property.
+  https://adrianroselli.com/2021/06/using-css-to-enforce-accessibility.html#Sort */
+ 
+  @layer sorting {
+    [aria-sort="ascending"] > button svg.asc {
+      stroke: var(--col-header-color);
+      fill: var(--col-header-color);
+    }
+   
+    [aria-sort="descending"] > button svg.des {
+      stroke: var(--col-header-color);
+      fill: var(--col-header-color);
+    }
+  }
+
+  /* Lean on native HTML attributes along with ARIA properties, such as when the state of a control is invalid:
+   https://adrianroselli.com/2021/06/using-css-to-enforce-accessibility.html#Error */
+  textarea[aria-invalid="true"],
+  textarea[aria-invalid="spelling"],
+  textarea[aria-invalid="grammar"],
+  input:not([type="checkbox"]):not([type="file"]):not([type="image"]):not([type="radio"]):not([type="range"])[aria-invalid] {
+    background: linear-gradient(135deg, rgba(255,0,0,1) 0, rgba(255,0,0,1) .4em, rgba(255,255,255,1) .4em);
+  }
+
+   /* showing the current page in a set of navigation links
+ https://adrianroselli.com/2021/06/using-css-to-enforce-accessibility.html#Current */
+ a[aria-current="page"] {
+  background-color: #187aba;
+  border-color: #187aba;
+}
+}
+
+
+/* - - - - - - - - - - - */
+
+@layer layout {
+app-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+  gap: 0px 0px;
+  grid-auto-flow: row;
+  grid-template-areas:
+    "header"
+    "nav"
+    "main"
+    "aside"
+    "footer";
+}
+
+header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 0px 0px;
+  grid-auto-flow: row;
+  grid-template-areas: ". . .";
+  grid-area: header;
+}
+
+nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 0px 0px;
+  grid-auto-flow: row;
+  grid-template-areas: ". . .";
+  grid-area: nav;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 0px 0px;
+  grid-auto-flow: row;
+  grid-template-areas: ". . .";
+  grid-area: main;
+}
+
+aside {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 0px 0px;
+  grid-auto-flow: row;
+  grid-template-areas: ". . .";
+  grid-area: aside;
+}
+
+footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 0px 0px;
+  grid-auto-flow: row;
+  grid-template-areas: ". . .";
+  grid-area: footer;
+}
+}
+
+
+
+/* - - - - - - - - - - - */
+
+@layer feature-detection {
+
+/* Nesting:
+https://github.com/w3c/csswg-drafts/issues/8399 */
+@supports (.foo { @media (width >= 500px) { } }) {
+  …
+}
+
+/* https://moderncss.dev/testing-feature-support-for-modern-css/ */
+ @supports (accent-color: red) {
+    /* styles when accent-color is supported */
+  }
+
+  @supports selector(:is(a)) {
+    /* styles when :is() is supported */
+  }
+
+  @supports (leading-trim: both) or (text-box-trim: both) {
+    /* Styles when either property is supported */
+  }
+  
+  @supports (transform: scale(1)) and (scroll-timeline-name: a) {
+    /* Styles when both properties are supported */
+  }
+  
+  @supports not selector(:focus-visible) {
+    /* Styles when :focus-visible is not supported */
+  }
+
+  /* This should fail in Firefox 112 */
+  @supports selector(li:has(+ *)) {
+   /* It may not fail, so the body becomes red */
+   body {
+    background: red;
+  }
+
+  /* This rule does fail to apply */
+  li:has(+ *) {
+    background: green;
+  }
+
+   /* https://www.bram.us/2023/01/04/css-has-feature-detection-with-supportsselector-you-want-has-not-has/
+https://codepen.io/bramus/pen/YzvowwJ */
+
+   
+}
+
+
